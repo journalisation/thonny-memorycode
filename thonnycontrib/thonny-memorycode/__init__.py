@@ -1,5 +1,6 @@
 from thonny import get_workbench
 from tkinter.messagebox import showinfo, showerror
+from tkinter.simpledialog import askstring
 from git import Repo, exc
 #from memorycode import Memorycode
 import os
@@ -72,7 +73,7 @@ class Memorycode:
 def info():
     current_tab = get_workbench().get_editor_notebook().get_current_editor()
     showinfo(MODULE_NAME, get_current_file_directory())
-#    showinfo(MODULE_NAME, str(repo))
+#    showinfo(MODULE_NAME, askstring(MODULE_NAME, "une chaîne"))
 #showinfo(MODULE_NAME, str(repo.active_branch.name))
 
 
@@ -103,8 +104,12 @@ def load_plugin():
                           handler=info)
     workbench.add_command(command_id="save",
                           menu_name="tools",
-                          command_label="save",
+                          command_label="sauvegarde",
                           handler=memorycode.save)
+    workbench.add_command(command_id="project",
+                          menu_name="tools",
+                          command_label="projet",
+                          handler=lambda : memorycode.create_and_checkout_branch(askstring(MODULE_NAME, "Entrez le nom de votre projet")))
 
    # workbench.bind("WorkbenchClose", before_running)
    # workbench.bind("NewFile", lambda arg: showinfo("new", arg))
