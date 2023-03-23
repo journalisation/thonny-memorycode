@@ -1,12 +1,25 @@
+MODULE_NAME = "memorycode"
+
+import os
 from thonny import get_workbench
 from tkinter.messagebox import showinfo, showerror
 from tkinter.simpledialog import askstring
 from tkinter import ttk
-from git import Repo, exc
-#from memorycode import Memorycode
-import os
+try:
+    git_dir = [os.path.join(os.getcwd(), "PortableGit", "cmd"),
+                os.path.join(os.getcwd(), "..", "PortableGit", "cmd"),
+                os.path.join(os.getcwd(), "..", "Git", "cmd")]
+    os.environ["PATH"] = os.pathsep.join(git_dir) + os.pathsep + os.environ["PATH"]
+    from git import Repo
+except ImportError as err:
+   # [print(e, ".........", eval("err." + e)) for e in dir(err)]
+    if err.msg.find("module") >= 0:
+        showerror("MODULE_NAME", "GitPython is not installed.")
+    elif err.msg.find("executable") >= 0:
+        showerror("MODULE_NAME", "No git executable found.")
 
-MODULE_NAME = "memorycode"
+#from memorycode import Memorycode
+
 class Memorycode:
     def __init__(self, output=lambda x:x):
         self.output = output
@@ -140,4 +153,3 @@ def load_plugin():
     # workbench.bind("<<TextChange>>", lambda arg: showinfo("run4", arg))
     # create a panel in ui
     workbench.add_view(MemorycodeView, "Memorycode", True)
-    
