@@ -14,7 +14,8 @@ class Memorycode:
                 self.repo = Repo(path)
 
         except exc.InvalidGitRepositoryError:
-            self.output("No repository set.")
+            pass
+            #self.output("No repository set.")
 
     def save(self, message="commit from Thonny"):
         self.__commit(message)
@@ -43,7 +44,7 @@ class Memorycode:
         return self.repo.active_branch
 
     def __commit(self, commit_message):
-        if self.repo is not None and self.get_current_project_name() and memorycode.repo.head.commit.diff(None):
+        if self.repo is not None and self.get_current_project_name() and self.repo.head.commit.diff(None):
             try:
                 self.repo.git.add('--all')
                 self.repo.index.commit(commit_message)

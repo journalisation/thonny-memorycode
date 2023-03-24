@@ -96,7 +96,7 @@ def load_plugin():
 
 def unload_plugin(event=None):
     global memorycode
-    showinfo("run4", "arg")
+   # showinfo("run4", "arg")
     try:
         memorycode.save()
     except Exception as e:
