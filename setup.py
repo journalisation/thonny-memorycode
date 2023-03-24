@@ -5,18 +5,18 @@ from setuptools import find_packages, setup
 
 setup(
     name="memorycode",
-    version="0.0.1",
+    version="0.0.2",
     author="Jerome Amiguet",
-    packages=["thonnycontrib.thonny-memorycode"],
-    description="Autosaving",
-    long_description="Autosaving",
+    packages=["thonnycontrib.memorycode"],
+    description="Memorycode",
+    long_description="Memorycode",
     long_description_content_type="text/markdown",
-    url="https://github.com/epfl-mobots/thonny-memorycode",
+    url="https://github.com/journalisation/thonny-memorycode",
     install_requires=[
         "GitPython",
     ],
     package_data={
-        "thonnycontrib.thonny-memorycode": [
+        "thonnycontrib.memorycode": [
             "res/*",
         ],
     },
