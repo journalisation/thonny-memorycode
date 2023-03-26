@@ -54,9 +54,16 @@ def before_running():
 
 
 def save(message="commit from Thonny"):
+    showinfo(MODULE_NAME, "save")
     editor = get_workbench().get_editor_notebook().get_current_editor()
     editor.save_file()
     memorycode.save(message)
+
+def show_view(arg):
+    global memorycode
+    if arg.view_id == "MemorycodeView":
+        showinfo(MODULE_NAME, memorycode.get_saves())
+        get_workbench().get_view("MemorycodeView").from_saves(memorycode.get_saves())
 
 
 def load_plugin():
@@ -86,6 +93,7 @@ def load_plugin():
     # workbench.bind("RunFile", lambda arg: showinfo("run1", arg))
     # workbench.bind("Save", lambda x: memorycode.save())
     # workbench.bind("RemoteFilesChanged", lambda arg: showinfo("run3", arg))
+    workbench.bind("ShowView", show_view)
     workbench.bind("<<NotebookTabChanged>>", lambda x: memorycode.set_directory(path=get_current_file_directory()))
     # workbench.bind("<<TextChange>>", lambda arg: showinfo("run4", arg))
     #lambda arg: showinfo("run3", f"{arg.keycode} {arg.num} {arg.widget} {arg.state}"))
@@ -93,6 +101,7 @@ def load_plugin():
 
 
     workbench.add_view(MemorycodeView, "Memorycode", "se")
+
 
 def unload_plugin(event=None):
     global memorycode

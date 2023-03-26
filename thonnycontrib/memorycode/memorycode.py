@@ -21,11 +21,12 @@ class Memorycode:
         self.__commit(message)
         self.__push_with_ssh(".ssh/id_ed25519")
 
-    def list_save(self):
+    def get_saves(self):
         if self.repo is not None:
             commits = list(self.repo.iter_commits())
-            for commit in commits:
-                self.output(commit.hexsha[-8:] + "  " + commit.message)
+            return commits
+        #    for commit in commits:
+        #        self.output(commit.hexsha[-8:] + "  " + commit.message)
 
     # Return name of current project (= git branch if not main), else None
     def get_current_project_name(self):

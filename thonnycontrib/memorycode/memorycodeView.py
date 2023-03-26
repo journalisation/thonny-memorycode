@@ -30,10 +30,15 @@ class MemorycodeView (ttk.Frame):
         canvas.grid(row=1, column=0, sticky="nsew")
         scrollbar.grid(row=1, column=0, sticky="nse")
 
-        for i in range(50):
+        #self.from_saves([i for i in range(50)])
+
+    def from_saves(self, saves):
+        if saves is None:
+            return
+        for i in range(len(saves)):
             rect = Canvas(self.scrollable_frame, bg="blue", height=50)
             rect.grid(row=i, column=0, sticky="nsew")
-            label = Label(rect, text=str(i + 1), fg="white", bg="blue")
+            label = Label(rect, text=f"{i} " + saves[i].summary, fg="white", bg="blue")
             label.place(relx=0.5, rely=0.5, anchor="center")
 
 if __name__ == "__main__":
