@@ -23,10 +23,11 @@ except ImportError as err:
 
 
 memorycode = None
+current_directory = None
 
 def info(memorycode):
     current_tab = get_workbench().get_editor_notebook().get_current_editor()
-    showinfo(MODULE_NAME, eval(askstring(MODULE_NAME, "Entrez le nom de votre projet")))
+    showinfo(MODULE_NAME, eval(askstring(MODULE_NAME, "Entrez votre demande")))
 
 
 #    showinfo(MODULE_NAME, get_current_file_directory())
@@ -54,16 +55,29 @@ def before_running():
 
 
 def save(message="commit from Thonny"):
-    showinfo(MODULE_NAME, "save")
     editor = get_workbench().get_editor_notebook().get_current_editor()
     editor.save_file()
-    memorycode.save(message)
+    memorycode.save(askstring(MODULE_NAME, "Entrez le nom de votre sauvegarde"))
+    get_workbench().get_view("MemorycodeView").from_saves(memorycode.get_saves())
+
+def load(branch_name=None):
+    memorycode.load(branch_name)
+    get_workbench().get_view("MemorycodeView").from_saves(memorycode.get_saves())
 
 def show_view(arg):
     global memorycode
     if arg.view_id == "MemorycodeView":
         showinfo(MODULE_NAME, memorycode.get_saves())
         get_workbench().get_view("MemorycodeView").from_saves(memorycode.get_saves())
+
+def switch_tab(arg):
+    global memorycode
+    global current_directory
+    new_dir = get_current_file_directory()
+    if new_dir and current_directory != new_dir and os.path.isfile(f"{new_dir}/.memorycode"):
+        memorycode.set_directory(path=get_current_file_directory())
+        load()
+        current_directory = get_current_file_directory()
 
 
 def load_plugin():
@@ -85,7 +99,7 @@ def load_plugin():
     workbench.add_command(command_id="project",
                           menu_name="tools",
                           command_label="projet",
-                          handler=lambda: memorycode.create_and_checkout_branch(
+                          handler=lambda: load(
                               askstring(MODULE_NAME, "Entrez le nom de votre projet")))
 
     # workbench.bind("WorkbenchClose", before_running)
@@ -94,7 +108,7 @@ def load_plugin():
     # workbench.bind("Save", lambda x: memorycode.save())
     # workbench.bind("RemoteFilesChanged", lambda arg: showinfo("run3", arg))
     workbench.bind("ShowView", show_view)
-    workbench.bind("<<NotebookTabChanged>>", lambda x: memorycode.set_directory(path=get_current_file_directory()))
+    workbench.bind("<<NotebookTabChanged>>", switch_tab)
     # workbench.bind("<<TextChange>>", lambda arg: showinfo("run4", arg))
     #lambda arg: showinfo("run3", f"{arg.keycode} {arg.num} {arg.widget} {arg.state}"))
     # create a panel in ui

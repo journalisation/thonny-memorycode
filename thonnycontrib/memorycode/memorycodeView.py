@@ -35,6 +35,8 @@ class MemorycodeView (ttk.Frame):
     def from_saves(self, saves):
         if saves is None:
             return
+        for widget in self.scrollable_frame.winfo_children():
+            widget.destroy()
         for i in range(len(saves)):
             rect = Canvas(self.scrollable_frame, bg="blue", height=50)
             rect.grid(row=i, column=0, sticky="nsew")
