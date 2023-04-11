@@ -1,11 +1,12 @@
 MODULE_NAME = "memorycode"
 
 import os
-from thonny import get_workbench
+from thonny import get_workbench, get_shell
 from tkinter.messagebox import showinfo, showerror
 from tkinter.simpledialog import askstring
 from thonnycontrib.memorycode.memorycodeView import MemorycodeView
 from thonnycontrib.memorycode.memorycode import Memorycode
+from queue import Queue
 
 # Git and GitPython localisation attempt
 try:
@@ -24,6 +25,7 @@ except ImportError as err:
 
 memorycode = None
 current_directory = None
+output_queue = None
 
 def info(memorycode):
     current_tab = get_workbench().get_editor_notebook().get_current_editor()
@@ -48,12 +50,6 @@ def get_current_file_directory():
             directory = os.path.dirname(filename)
             return directory
 
-
-def before_running():
-    showinfo(MODULE_NAME, "before_running")
-    # commit_code()
-
-
 def save(message="commit from Thonny"):
     editor = get_workbench().get_editor_notebook().get_current_editor()
     editor.save_file()
@@ -67,7 +63,6 @@ def load(branch_name=None):
 def show_view(arg):
     global memorycode
     if arg.view_id == "MemorycodeView":
-        showinfo(MODULE_NAME, memorycode.get_saves())
         get_workbench().get_view("MemorycodeView").from_saves(memorycode.get_saves())
 
 def switch_tab(arg):
@@ -79,15 +74,33 @@ def switch_tab(arg):
         load()
         current_directory = get_current_file_directory()
 
+def periodic_output_check():
+    global output_queue
+    if not output_queue.empty():
+        showinfo(MODULE_NAME, output_queue.get())
+    get_workbench().after(100, periodic_output_check)
+
+def print_to_shell(str, stderr=False):
+    text = get_shell().text
+    text._insert_text_directly(str, ("io", "stderr") if stderr else ("io",))
+    text.see("end")
+
+def print_error(*args):
+    get_shell().print_error(" ".join([str(arg) for arg in args]))
+
 
 def load_plugin():
     global memorycode
+    global output_queue
+    output_queue = Queue()
     # unload function
     get_workbench().bind("WorkbenchClose", unload_plugin, True)
 
     # init_module()
-    memorycode = Memorycode(output=lambda x: showinfo(MODULE_NAME, x))
     workbench = get_workbench()
+    #memorycode = Memorycode(output=lambda x: workbench.event_generate("MemorycodeOutput", message="message " + x))
+    #memorycode = Memorycode(output=lambda x: workbench.after(0, lambda : showinfo(MODULE_NAME, x)))
+    memorycode = Memorycode(output=lambda x: output_queue.put(x))
     workbench.add_command(command_id="info",
                           menu_name="tools",
                           command_label="info",
@@ -109,12 +122,14 @@ def load_plugin():
     # workbench.bind("RemoteFilesChanged", lambda arg: showinfo("run3", arg))
     workbench.bind("ShowView", show_view)
     workbench.bind("<<NotebookTabChanged>>", switch_tab)
+    #workbench.bind("MemorycodeOutput", message)
     # workbench.bind("<<TextChange>>", lambda arg: showinfo("run4", arg))
     #lambda arg: showinfo("run3", f"{arg.keycode} {arg.num} {arg.widget} {arg.state}"))
     # create a panel in ui
 
 
     workbench.add_view(MemorycodeView, "Memorycode", "se")
+    get_workbench().after(100, periodic_output_check)
 
 
 def unload_plugin(event=None):
