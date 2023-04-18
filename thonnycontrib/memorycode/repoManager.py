@@ -8,7 +8,7 @@ class RepoManager(Thread):
         self.repo = repo
         self.output = output
         self.autosave = autosave
-        self.ssh_key_path = repo.working_dir + "/.ssh/id_ed25519"
+        self.ssh_key_path = str(repo.working_dir).replace("\\", "/") + "/.ssh/id_ed25519" # git needs forward slashes
         self.task_queue = Queue()
 
     def run(self):
@@ -25,19 +25,23 @@ class RepoManager(Thread):
 
             while not self.task_queue.empty():
                 task = self.task_queue.get()
-                if task[0] == "commit":
-                    self.__commit(task[1])
-                elif task[0] == "push":
-                    self.__push()
-                elif task[0] == "pull":
-                    self.__pull(task[1])
-                elif task[0] == "fetch":
-                    self.__fetch()
-                elif task[0] == "checkout":
-                    self.__checkout(task[1])
-                self.task_queue.task_done()
+                try:
+                    if task[0] == "commit":
+                        self.__commit(task[1])
+                    elif task[0] == "push":
+                        self.__push()
+                    elif task[0] == "pull":
+                        self.__pull(task[1])
+                    elif task[0] == "fetch":
+                        self.__fetch()
+                    elif task[0] == "checkout":
+                        self.__checkout(task[1])
+                    self.task_queue.task_done()
+                except Exception as e:
+                    self.output("Task failed: " + str(e))
 
     def commit(self, commit_message):
+        self.output("Committing code...")
         self.task_queue.put(["commit", commit_message])
 
     def push(self):
@@ -56,7 +60,7 @@ class RepoManager(Thread):
         return not self.task_queue.empty() and self.task_queue.unfinished_tasks == 0
 
     # Return name of current project (= git branch if not main), else None
-    def get_current_project_name(self):
+    def get_branch_name(self):
         if self.repo is not None:
             return self.__get_active_branch() if str(self.__get_active_branch()) != "main" else None
 
@@ -68,7 +72,7 @@ class RepoManager(Thread):
         return self.repo.active_branch
 
     def __commit(self, commit_message):
-        if self.repo is not None and self.get_current_project_name() and self.repo.head.commit.diff(None):
+        if self.repo is not None and self.get_branch_name() and self.repo.head.commit.diff(None):
             try:
                 self.repo.git.add('--all')
                 self.repo.index.commit(commit_message)
@@ -80,7 +84,7 @@ class RepoManager(Thread):
 
     def __push(self):
         if self.repo is not None and self.repo.remotes:
-            if self.get_current_project_name():
+            if self.get_branch_name():
                 # Important not to check for known_hosts
                 ssh_command = f"ssh -v -i {self.ssh_key_path} -o StrictHostKeyChecking=no"
                 #  os.system("ssh-agent bash -c 'ssh-add .ssh/id_ed25519 ; git push '")

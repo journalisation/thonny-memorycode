@@ -29,6 +29,8 @@ class Memorycode:
             self.repo_manager.commit(message)
 
     def load(self, branch_name=None):
+        if branch_name == None:
+            branch_name = self.get_current_project_name()
         self.repo_manager.pull(branch_name)
         self.repo_manager.checkout(branch_name)
 
@@ -38,6 +40,10 @@ class Memorycode:
             return commits
         #    for commit in commits:
         #        self.output(commit.hexsha[-8:] + "  " + commit.message)
+
+    def get_current_project_name(self):
+        if self.repo_manager is not None:
+            return self.repo_manager.get_branch_name()
 
 
     def git_diagnostic(self):
