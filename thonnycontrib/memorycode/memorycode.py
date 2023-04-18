@@ -45,6 +45,10 @@ class Memorycode:
         if self.repo_manager is not None:
             return self.repo_manager.get_branch_name()
 
+    def get_projects(self):
+        if self.repo_manager is not None:
+            return self.repo_manager.get_branches()
+
 
     def git_diagnostic(self):
         if self.repo_manager is not None:

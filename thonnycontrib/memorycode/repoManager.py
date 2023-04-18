@@ -62,7 +62,17 @@ class RepoManager(Thread):
     # Return name of current project (= git branch if not main), else None
     def get_branch_name(self):
         if self.repo is not None:
-            return self.__get_active_branch() if str(self.__get_active_branch()) != "main" else None
+            return str(self.__get_active_branch()) if str(self.__get_active_branch()) != "main" else None
+
+    # Return name of current branches
+    def get_branches(self):
+        if self.repo is not None:
+            branches = [str(b) for b in self.__get_branches()]
+            branches = [b for b in branches if not str(b).endswith("main") and not str(b).endswith("HEAD")]
+            branches = [b.split("/")[-1] if b.startswith("origin/") else b for b in branches]
+            branches = list(dict.fromkeys(branches)) # Remove duplicates
+            branches.sort()
+            return  branches
 
     def iter_commits(self):
         if self.repo is not None:
@@ -70,6 +80,9 @@ class RepoManager(Thread):
 
     def __get_active_branch(self):
         return self.repo.active_branch
+
+    def __get_branches(self):
+        return self.repo.references
 
     def __commit(self, commit_message):
         if self.repo is not None and self.get_branch_name() and self.repo.head.commit.diff(None):

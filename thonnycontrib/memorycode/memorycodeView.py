@@ -13,13 +13,15 @@ class MemorycodeView (ttk.Frame):
         self.top_frame.grid(row=0, column=0, sticky="nsew")
         label = ttk.Label(self.top_frame, text="Memorycode")
         label.grid(row=0, column=0, sticky="nsew")
-        combobox = ttk.Combobox(self.top_frame)
+        combobox = ttk.Combobox(self.top_frame, state="readonly")
         combobox.grid(row=0, column=1, sticky="nsew")
 
         canvas = Canvas(self, bg="white")
 
         scrollbar = Scrollbar(self, orient="vertical", command=canvas.yview)
         self.scrollable_frame = Frame(canvas, bg="white")
+        self.saves = None
+        self.projects = None
 
      #   self.scrollable_frame.bind(
       #      "<Configure>",
@@ -39,15 +41,21 @@ class MemorycodeView (ttk.Frame):
         #self.from_saves([i for i in range(50)])
 
     def set_projects_list(self, projects, active=None, callback=None):
-        self.top_frame.children["!combobox"].config(values=projects)
+        if self.projects != projects:
+            self.projects = projects
+            self.top_frame.children["!combobox"].config(values=projects)
         if active is not None:
-            self.top_frame.children["!combobox"].current(active)
+            if type(active) == int:
+                self.top_frame.children["!combobox"].current(active)
+            elif type(active) == str:
+                self.top_frame.children["!combobox"].current(projects.index(active))
         if callback is not None:
-            self.top_frame.children["!combobox"].bind("<<ComboboxSelected>>", callback)
+            self.top_frame.children["!combobox"].bind("<<ComboboxSelected>>", lambda x : callback(self.top_frame.children["!combobox"].get()))
 
     def from_saves(self, saves):
-        if saves is None:
+        if self.saves == saves:
             return
+        self.saves = saves
         for widget in self.scrollable_frame.winfo_children():
             widget.destroy()
         for i in range(len(saves)):
@@ -66,6 +74,9 @@ class MemorycodeView (ttk.Frame):
 
             rect.columnconfigure(1, weight=1)
             rect.rowconfigure(1, weight=1)
+
+
+
 
 if __name__ == "__main__":
     # For testing
