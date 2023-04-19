@@ -76,11 +76,13 @@ def switch_tab(arg):
 
 def periodic_output_check():
     global output_queue
-    if not output_queue.empty():
-        showinfo(MODULE_NAME, output_queue.get())
-    get_workbench().get_view("MemorycodeView").from_saves(memorycode.get_saves())
+    view = get_workbench().get_view("MemorycodeView")
+    view.from_saves(memorycode.get_saves())
     current_project = memorycode.get_current_project_name()
-    get_workbench().get_view("MemorycodeView").set_projects_list(memorycode.get_projects(), current_project, lambda x : showinfo(MODULE_NAME, str(x)))
+    view.set_projects_list(memorycode.get_projects(), current_project, lambda x : showinfo(MODULE_NAME, str(x)))
+    view.display_flags(["busy" if memorycode.is_busy() else ""])
+    if not output_queue.empty():
+        view.display_communication(output_queue.get())
 
     get_workbench().after(100, periodic_output_check)
 

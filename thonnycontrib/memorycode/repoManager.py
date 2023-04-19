@@ -57,7 +57,7 @@ class RepoManager(Thread):
         self.task_queue.put(["checkout", branch_name])
 
     def is_busy(self):
-        return not self.task_queue.empty() and self.task_queue.unfinished_tasks == 0
+        return (not self.task_queue.empty()) or (self.task_queue.unfinished_tasks != 0)
 
     # Return name of current project (= git branch if not main), else None
     def get_branch_name(self):

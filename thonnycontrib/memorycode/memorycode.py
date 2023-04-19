@@ -58,6 +58,8 @@ class Memorycode:
             except Exception as e:
                 self.output("No git" + str(e))
 
+    def is_busy(self):
+        return self.repo_manager.is_busy()
 
 
 

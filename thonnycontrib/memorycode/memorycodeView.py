@@ -1,6 +1,10 @@
 from tkinter import ttk, Canvas, Frame, Label, Scrollbar, Text
 from time import strftime, gmtime
 
+EMOJI_TIME = chr(128336)
+EMOJI_OK = chr(10004)
+EMOJI_ERROR = chr(9888)
+
 class MemorycodeView (ttk.Frame):
     def __init__(self, parent, *args, **kwargs):
         ttk.Frame.__init__(self, parent, *args, **kwargs)
@@ -11,10 +15,12 @@ class MemorycodeView (ttk.Frame):
 
         self.top_frame = ttk.Frame(self)
         self.top_frame.grid(row=0, column=0, sticky="nsew")
-        label = ttk.Label(self.top_frame, text="Memorycode")
-        label.grid(row=0, column=0, sticky="nsew")
         combobox = ttk.Combobox(self.top_frame, state="readonly")
-        combobox.grid(row=0, column=1, sticky="nsew")
+        combobox.grid(row=0, column=0, sticky="nsew")
+        self.flags_label = ttk.Label(self.top_frame, text=" "*10)
+        self.flags_label.grid(row=0, column=1, sticky="nsew")
+        self.comm_label = ttk.Label(self.top_frame, text=" "*10)
+        self.comm_label.grid(row=0, column=2, sticky="nsew")
 
         canvas = Canvas(self, bg="white")
 
@@ -74,6 +80,15 @@ class MemorycodeView (ttk.Frame):
 
             rect.columnconfigure(1, weight=1)
             rect.rowconfigure(1, weight=1)
+
+    def display_flags(self, flags):
+        text = self.flags_label.cget("text")
+        text = EMOJI_OK if not ("busy" in flags) else (EMOJI_TIME if ord(text[0]) < ord(EMOJI_TIME) or ord(text[0]) > ord(EMOJI_TIME) + 11 else chr(ord(text[0]) + 1))
+
+        self.flags_label.config(text=text)
+
+    def display_communication(self, comm):
+        self.comm_label.config(text=comm)
 
 
 
