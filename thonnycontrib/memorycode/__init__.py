@@ -69,7 +69,7 @@ def switch_tab(arg):
     global memorycode
     global current_directory
     new_dir = get_current_file_directory()
-    if new_dir and current_directory != new_dir and os.path.isfile(f"{new_dir}/.memorycode"):
+    if new_dir and current_directory != new_dir:
         memorycode.set_directory(path=get_current_file_directory())
         load()
         current_directory = get_current_file_directory()
@@ -79,8 +79,8 @@ def periodic_output_check():
     view = get_workbench().get_view("MemorycodeView")
     view.from_saves(memorycode.get_saves())
     current_project = memorycode.get_current_project_name()
-    view.set_projects_list(memorycode.get_projects(), current_project, lambda x : showinfo(MODULE_NAME, str(x)))
-    view.display_flags(["busy" if memorycode.is_busy() else ""])
+    view.set_projects_list(memorycode.get_projects(), current_project, memorycode.load)
+    view.display_flags(["busy" if memorycode.is_busy() else "", "OK" if memorycode.is_everything_ok() else "error"])
     if not output_queue.empty():
         view.display_communication(output_queue.get())
 

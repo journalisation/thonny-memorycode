@@ -55,6 +55,10 @@ class MemorycodeView (ttk.Frame):
                 self.top_frame.children["!combobox"].current(active)
             elif type(active) == str:
                 self.top_frame.children["!combobox"].current(projects.index(active))
+        elif len(projects) > 0:
+            self.top_frame.children["!combobox"].set("Select project")
+        else:
+            self.top_frame.children["!combobox"].set("No projects")
         if callback is not None:
             self.top_frame.children["!combobox"].bind("<<ComboboxSelected>>", lambda x : callback(self.top_frame.children["!combobox"].get()))
 
@@ -83,8 +87,8 @@ class MemorycodeView (ttk.Frame):
 
     def display_flags(self, flags):
         text = self.flags_label.cget("text")
-        text = EMOJI_OK if not ("busy" in flags) else (EMOJI_TIME if ord(text[0]) < ord(EMOJI_TIME) or ord(text[0]) > ord(EMOJI_TIME) + 11 else chr(ord(text[0]) + 1))
-
+        text = "" if not ("busy" in flags) else (EMOJI_TIME if ord(text[0]) < ord(EMOJI_TIME) or ord(text[0]) > ord(EMOJI_TIME) + 11 else chr(ord(text[0]) + 1))
+        text += (EMOJI_OK if not ("busy" in flags) else "") if "OK" in flags else EMOJI_ERROR
         self.flags_label.config(text=text)
 
     def display_communication(self, comm):

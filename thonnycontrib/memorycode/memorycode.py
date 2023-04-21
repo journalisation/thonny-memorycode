@@ -1,38 +1,45 @@
 from git import Repo, exc
-from thonnycontrib.memorycode.repoManager import RepoManager
+from thonnycontrib.memorycode.repoManager import RepoManager, EmptyRepoManager
+from os import path as os_path
 
 
 class Memorycode:
     def __init__(self, output=lambda x: x):
-        self.repo_manager = None
-        self.repo_managers = {}
         self.output = output
+        self.repo_manager = EmptyRepoManager(None, self.output)
+        self.repo_managers = {}
     #    self.output("Memorycode loaded.")
 
     def set_directory(self, path=None):
-        try:
-            if path is None:
-                tmp_repo = Repo(search_parent_directories=True)
-            else:
-                tmp_repo = Repo(path, search_parent_directories=True)
-            if tmp_repo.working_dir not in self.repo_managers:
-                self.repo_managers[tmp_repo.working_dir] = RepoManager(tmp_repo, self.output)
-                self.repo_managers[tmp_repo.working_dir].start()
-            self.repo_manager = self.repo_managers[tmp_repo.working_dir]
+        if not os_path.isfile(f"{path}/.memorycode"):
+            self.repo_manager = EmptyRepoManager(None, self.output)
+            self.output("Directory not tracked by Memorycode.")
+        else:
+            try:
+                if path is None:
+                    tmp_repo = Repo(search_parent_directories=True)
+                else:
+                    tmp_repo = Repo(path, search_parent_directories=True)
+                if tmp_repo.working_dir not in self.repo_managers:
+                    self.repo_managers[tmp_repo.working_dir] = RepoManager(tmp_repo, self.output)
+                    self.repo_managers[tmp_repo.working_dir].start()
+                self.repo_manager = self.repo_managers[tmp_repo.working_dir]
 
-        except exc.InvalidGitRepositoryError:
-            pass
-            #self.output("No repository set.")
+            except exc.InvalidGitRepositoryError:
+                self.repo_manager = EmptyRepoManager(path, self.output)
+                self.output("No repository set.")
 
     def save(self, message="commit from Thonny"):
         if self.repo_manager is not None:
             self.repo_manager.commit(message)
+            self.repo_manager.push()
 
     def load(self, branch_name=None):
-        if branch_name == None:
-            branch_name = self.get_current_project_name()
-        self.repo_manager.pull(branch_name)
-        self.repo_manager.checkout(branch_name)
+        if self.repo_manager is not None:
+            if branch_name is None:
+                branch_name = self.get_current_project_name()
+            self.repo_manager.checkout(branch_name)
+            self.repo_manager.pull(branch_name)
 
     def get_saves(self):
         if self.repo_manager is not None:
@@ -60,6 +67,9 @@ class Memorycode:
 
     def is_busy(self):
         return self.repo_manager.is_busy()
+
+    def is_everything_ok(self):
+        return self.repo_manager.is_everything_ok()
 
 
 

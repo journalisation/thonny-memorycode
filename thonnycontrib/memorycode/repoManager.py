@@ -36,9 +36,9 @@ class RepoManager(Thread):
                         self.__fetch()
                     elif task[0] == "checkout":
                         self.__checkout(task[1])
-                    self.task_queue.task_done()
                 except Exception as e:
                     self.output("Task failed: " + str(e))
+                self.task_queue.task_done()
 
     def commit(self, commit_message):
         self.output("Committing code...")
@@ -77,6 +77,9 @@ class RepoManager(Thread):
     def iter_commits(self):
         if self.repo is not None:
             return self.repo.iter_commits()
+
+    def is_everything_ok(self):
+        return True
 
     def __get_active_branch(self):
         return self.repo.active_branch
@@ -132,7 +135,42 @@ class RepoManager(Thread):
             elif "origin/" + str(branch_name) in self.repo.references:
                 # Branch exists on remote, checkout
                 self.repo.git.checkout("origin/" + branch_name)
-            # Branch does not exist yet, create it and checkout
-            self.repo.git.branch(branch_name)
-            self.repo.git.checkout(branch_name)
+            else:
+                # Branch does not exist yet, create it and checkout
+                self.repo.git.branch(branch_name)
+                self.repo.git.checkout(branch_name)
 
+
+class EmptyRepoManager:
+    def __init__(self, repo, output=lambda x: x, autosave=True):
+        self.output = output
+
+    def commit(self, commit_message):
+        pass
+
+    def push(self):
+        pass
+
+    def pull(self, branch_name):
+        pass
+
+    def fetch(self):
+        pass
+
+    def checkout(self, branch_name):
+        pass
+
+    def is_busy(self):
+        return False
+
+    def get_branch_name(self):
+        return None
+
+    def get_branches(self):
+        return []
+
+    def iter_commits(self):
+        return []
+
+    def is_everything_ok(self):
+        return False
