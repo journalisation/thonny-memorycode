@@ -70,22 +70,37 @@ class MemorycodeView (ttk.Frame):
         self.saves = saves
         for widget in self.scrollable_frame.winfo_children():
             widget.destroy()
-        for i in range(len(saves)):
-            rect = Canvas(self.scrollable_frame, bg="blue", height=50)
-            rect.grid(row=i, column=0, sticky="nsew")
-            rect.bind("<1>", lambda x : print(x))
-            text = Text(rect, fg="white", bg="blue", height=rect.winfo_height()*3)
-            text.insert("0.0", saves[i].summary + "\n" + saves[i].committer.name + "\n" + strftime("%a, %d %b %Y %H:%M", gmtime(saves[i].committed_date)))
-            text.config(state=('disabled' if i != 0 else 'normal'), cursor=('arrow' if i != 0 else 'xterm'))
-            text.save = saves[i]
-            #text.bindtags(tuple(list(text.bindtags()).insert(1, rect)))
-            if i != 0:
-                text.bind("<1>", lambda x : print(str(x.widget.save.hexsha) + "  " + str(x) + '\n' + '\n'.join(map(str, [x.num, x.widget, x.widget.get(2.0, '2.end')]))))
-            text.grid(row=0, column=0, sticky="nw")
-            #label.place(relx=0.5, rely=0.5, anchor="center")
 
-            rect.columnconfigure(1, weight=1)
-            rect.rowconfigure(1, weight=1)
+        same_save_count = 0
+        text = None
+        string = ""
+        for i in range(len(saves)):
+            if(i == 0 or
+                    ((saves[i].summary != saves[i-1].summary) or (saves[i].committer.name != saves[i-1].committer.name)
+                    or (strftime("%d %b %Y", gmtime(saves[i].committed_date)) != strftime("%d %b %Y", gmtime(saves[i-1].committed_date))))):
+                rect = Canvas(self.scrollable_frame, bg="blue", height=50)
+                rect.grid(row=i, column=0, sticky="nsew")
+                rect.bind("<1>", lambda x : print(x))
+                text = Text(rect, fg="white", bg="blue", height=rect.winfo_height()*3)
+                string = saves[i].summary + "\n" + saves[i].committer.name + "\n" + strftime("%a, %d %b %Y %H:%M", gmtime(saves[i].committed_date))
+                text.insert("1.0", string)
+                text.config(state=('disabled' if i != 0 else 'normal'), cursor=('arrow' if i != 0 else 'xterm'))
+                text.save = saves[i]
+                #text.bindtags(tuple(list(text.bindtags()).insert(1, rect)))
+                if i != 0:
+                    text.bind("<1>", lambda x : print(str(x.widget.save.hexsha) + "  " + str(x) + '\n' + '\n'.join(map(str, [x.num, x.widget, x.widget.get(2.0, '2.end')]))))
+                text.grid(row=0, column=0, sticky="nw")
+                #label.place(relx=0.5, rely=0.5, anchor="center")
+
+                rect.columnconfigure(1, weight=1)
+                rect.rowconfigure(1, weight=1)
+                same_save_count = 0
+            else:
+                same_save_count += 1
+                text.config(state='normal')
+                text.delete("1.0", "end")
+                text.insert("1.0", string + "    " + (str(same_save_count + 1) + " saves"))
+                text.config(state='disabled')
 
     def display_flags(self, flags):
         text = self.flags_label.cget("text")
