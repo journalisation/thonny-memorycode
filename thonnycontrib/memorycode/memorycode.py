@@ -76,6 +76,14 @@ class Memorycode:
     def diagnostic(self):
         return self.repo_manager.diagnostic()
 
+    def close(self, commit_msg=None):
+        for repo_manager in self.repo_managers.values():
+            if type(repo_manager) is RepoManager: # and not an EmptyRepoManager or None
+                repo_manager.commit(commit_msg)
+                repo_manager.push()
+                repo_manager.stop()
+                repo_manager.join()
+
 
 
 

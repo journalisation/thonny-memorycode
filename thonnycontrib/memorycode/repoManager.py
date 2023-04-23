@@ -3,7 +3,7 @@ from time import time, sleep
 from queue import Queue
 
 class RepoManager(Thread):
-    def __init__(self, repo, output=lambda x: x, autosave=False):
+    def __init__(self, repo, output=lambda x: x, autosave=True):
         super().__init__()
         self.repo = repo
         self.output = output
@@ -18,7 +18,7 @@ class RepoManager(Thread):
         while True:
             sleep(1)
             if self.autosave and (time() - t_autosave > 60):
-                self.commit("autosave")
+                self.commit()
                 self.__push()
                 t_autosave = time()
 
@@ -35,11 +35,14 @@ class RepoManager(Thread):
                         self.__fetch()
                     elif task[0] == "checkout":
                         self.__checkout(task[1], task[2])
+                    elif task[0] == "stop":
+                        self.task_queue.task_done()
+                        return
                 except Exception as e:
                     self.output("Task failed: " + str(e))
                 self.task_queue.task_done()
 
-    def commit(self, commit_message):
+    def commit(self, commit_message = None):
         self.output("Committing code...")
         self.task_queue.put(["commit", commit_message])
 
@@ -89,6 +92,9 @@ class RepoManager(Thread):
             diag += ["busy"]
         return diag
 
+    def stop(self):
+        self.task_queue.put(["stop"])
+
     def __get_active_branch(self):
         return self.repo.active_branch
 
@@ -105,7 +111,7 @@ class RepoManager(Thread):
             return False
         try:
             self.repo.git.add('--all')
-            self.repo.index.commit(commit_message)
+            self.repo.index.commit(commit_message if commit_message else "autosave")
             self.output("Code committed successfully.")
         except Exception as e:
             self.output("Failed to commit code " + str(e))
@@ -120,6 +126,10 @@ class RepoManager(Thread):
                 with self.repo.git.custom_environment(GIT_SSH_COMMAND=ssh_command):
                     self.repo.remote().push(refspec=self.repo.head.reference)
                     self.output("Pushed successfully.")
+            else:
+                self.output("Cannot push to main branch.")
+        else:
+            self.output("No remote repository.")
 
     def __pull(self, branch_name):
         if self.repo is not None and self.repo.remotes:
@@ -129,6 +139,10 @@ class RepoManager(Thread):
                 with self.repo.git.custom_environment(GIT_SSH_COMMAND=ssh_command):
                     self.repo.remote().pull(refspec=branch_name)
                     self.output("Pulled successfully.")
+            else:
+                self.output("Cannot pull from main branch.")
+        else:
+            self.output("No remote repository.")
 
     def __fetch(self):
         if self.repo is not None and self.repo.remotes:
@@ -136,6 +150,8 @@ class RepoManager(Thread):
             ssh_command = f"ssh -v -i {self.ssh_key_path} -o StrictHostKeyChecking=no"
             with self.repo.git.custom_environment(GIT_SSH_COMMAND=ssh_command):
                 self.repo.remote().fetch()
+        else:
+            self.output("No remote repository.")
 
     # Checkout branch in local or remote, create if create_if_not_exists is True and branch does not exist
     def __checkout(self, branch_name, create_if_not_exists=False):
@@ -151,6 +167,10 @@ class RepoManager(Thread):
                 # Branch does not exist yet, create it and checkout
                 self.repo.git.branch(branch_name)
                 self.repo.git.checkout(branch_name)
+            else:
+                self.output("Branch does not exist.")
+        else:
+            self.output("No repository.")
 
 
 class EmptyRepoManager:

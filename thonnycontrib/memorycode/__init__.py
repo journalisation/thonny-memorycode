@@ -150,8 +150,7 @@ def load_plugin():
 
 def unload_plugin(event=None):
     global memorycode
-   # showinfo("run4", "arg")
     try:
-        memorycode.save()
+        memorycode.close()
     except Exception as e:
-        showinfo("run4", str(e))
+        showinfo(MODULE_NAME, str(e))
