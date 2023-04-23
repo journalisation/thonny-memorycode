@@ -41,6 +41,11 @@ class Memorycode:
             self.repo_manager.checkout(branch_name)
             self.repo_manager.pull(branch_name)
 
+    def new_project(self, project_name):
+        if self.repo_manager is not None:
+            self.repo_manager.checkout("main")
+            self.repo_manager.checkout(project_name, create_if_not_exists=True)
+
     def get_saves(self):
         if self.repo_manager is not None:
             commits = list(self.repo_manager.iter_commits())
@@ -68,8 +73,8 @@ class Memorycode:
     def is_busy(self):
         return self.repo_manager.is_busy()
 
-    def is_everything_ok(self):
-        return self.repo_manager.is_everything_ok()
+    def diagnostic(self):
+        return self.repo_manager.diagnostic()
 
 
 

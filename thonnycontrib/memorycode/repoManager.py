@@ -3,25 +3,24 @@ from time import time, sleep
 from queue import Queue
 
 class RepoManager(Thread):
-    def __init__(self, repo, output=lambda x: x, autosave=True):
+    def __init__(self, repo, output=lambda x: x, autosave=False):
         super().__init__()
         self.repo = repo
         self.output = output
         self.autosave = autosave
         self.ssh_key_path = str(repo.working_dir).replace("\\", "/") + "/.ssh/id_ed25519" # git needs forward slashes
         self.task_queue = Queue()
+        self.errors = []
 
     def run(self):
-        t_commit = time()
-        t_remote = time()
+        t_autosave = time()
+
         while True:
             sleep(1)
-            if self.autosave and time() - t_commit > 60:
-                #self.__commit()
-                t_commit = time()
-            if time() - t_remote > 60:
-                #self.__push()
-                t_remote = time()
+            if self.autosave and (time() - t_autosave > 60):
+                self.commit("autosave")
+                self.__push()
+                t_autosave = time()
 
             while not self.task_queue.empty():
                 task = self.task_queue.get()
@@ -35,7 +34,7 @@ class RepoManager(Thread):
                     elif task[0] == "fetch":
                         self.__fetch()
                     elif task[0] == "checkout":
-                        self.__checkout(task[1])
+                        self.__checkout(task[1], task[2])
                 except Exception as e:
                     self.output("Task failed: " + str(e))
                 self.task_queue.task_done()
@@ -53,8 +52,8 @@ class RepoManager(Thread):
     def fetch(self):
         self.task_queue.put(["fetch"])
 
-    def checkout(self, branch_name):
-        self.task_queue.put(["checkout", branch_name])
+    def checkout(self, branch_name, create_if_not_exists=False):
+        self.task_queue.put(["checkout", branch_name, create_if_not_exists])
 
     def is_busy(self):
         return (not self.task_queue.empty()) or (self.task_queue.unfinished_tasks != 0)
@@ -78,8 +77,17 @@ class RepoManager(Thread):
         if self.repo is not None:
             return self.repo.iter_commits()
 
-    def is_everything_ok(self):
-        return True
+    def diagnostic(self):
+        diag = []
+        if self.repo is None:
+            diag += ["no_repo"]
+        if self.get_branch_name() is None:
+            diag += ["no_project"]
+        if self.repo.head.commit.diff(None) or self.repo.untracked_files or self.repo.is_dirty():
+            diag += ["dirty"]
+        if self.is_busy():
+            diag += ["busy"]
+        return diag
 
     def __get_active_branch(self):
         return self.repo.active_branch
@@ -88,15 +96,20 @@ class RepoManager(Thread):
         return self.repo.references
 
     def __commit(self, commit_message):
-        if self.repo is not None and self.get_branch_name() and self.repo.head.commit.diff(None):
-            try:
-                self.repo.git.add('--all')
-                self.repo.index.commit(commit_message)
-                self.output("Code committed successfully.")
-            except Exception as e:
-                self.output("Failed to commit code " + str(e))
-            return True
-        return False
+        if self.repo is None:
+            return False
+        if not (self.repo.head.commit.diff(None) or self.repo.untracked_files or self.repo.is_dirty()):
+            return False
+        if self.get_branch_name() is None:
+            self.output("Cannot commit to main branch.")
+            return False
+        try:
+            self.repo.git.add('--all')
+            self.repo.index.commit(commit_message)
+            self.output("Code committed successfully.")
+        except Exception as e:
+            self.output("Failed to commit code " + str(e))
+        return True
 
     def __push(self):
         if self.repo is not None and self.repo.remotes:
@@ -124,18 +137,17 @@ class RepoManager(Thread):
             with self.repo.git.custom_environment(GIT_SSH_COMMAND=ssh_command):
                 self.repo.remote().fetch()
 
-
-    def __checkout(self, branch_name):
+    # Checkout branch in local or remote, create if create_if_not_exists is True and branch does not exist
+    def __checkout(self, branch_name, create_if_not_exists=False):
         if self.repo is not None:
             # Check if the branch already exists
             if branch_name in self.repo.branches:
                 # Branch exists, checkout
                 self.repo.git.checkout(branch_name)
-                return
             elif "origin/" + str(branch_name) in self.repo.references:
                 # Branch exists on remote, checkout
                 self.repo.git.checkout("origin/" + branch_name)
-            else:
+            elif create_if_not_exists:
                 # Branch does not exist yet, create it and checkout
                 self.repo.git.branch(branch_name)
                 self.repo.git.checkout(branch_name)
@@ -157,7 +169,7 @@ class EmptyRepoManager:
     def fetch(self):
         pass
 
-    def checkout(self, branch_name):
+    def checkout(self, branch_name, create_if_not_exists=False):
         pass
 
     def is_busy(self):
@@ -172,5 +184,5 @@ class EmptyRepoManager:
     def iter_commits(self):
         return []
 
-    def is_everything_ok(self):
-        return False
+    def diagnostic(self):
+        return ["no_repo"]

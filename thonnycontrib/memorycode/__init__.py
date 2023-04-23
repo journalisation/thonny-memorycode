@@ -60,6 +60,9 @@ def load(branch_name=None):
     memorycode.load(branch_name)
     get_workbench().get_view("MemorycodeView").from_saves(memorycode.get_saves())
 
+def new_project(name):
+    memorycode.new_project(name)
+
 def show_view(arg):
     global memorycode
     if arg.view_id == "MemorycodeView":
@@ -80,11 +83,17 @@ def periodic_output_check():
     view.from_saves(memorycode.get_saves())
     current_project = memorycode.get_current_project_name()
     view.set_projects_list(memorycode.get_projects(), current_project, memorycode.load)
-    view.display_flags(["busy" if memorycode.is_busy() else "", "OK" if memorycode.is_everything_ok() else "error"])
+    view.display_flags(memorycode.diagnostic())
     if not output_queue.empty():
         view.display_communication(output_queue.get())
 
     get_workbench().after(100, periodic_output_check)
+
+def periodic_file_save():
+    editor = get_workbench().get_editor_notebook().get_current_editor()
+    if editor:
+        editor.save_file()
+    get_workbench().after(1000, periodic_file_save)
 
 def print_to_shell(str, stderr=False):
     text = get_shell().text
@@ -115,10 +124,10 @@ def load_plugin():
                           menu_name="tools",
                           command_label="sauvegarde",
                           handler=save)
-    workbench.add_command(command_id="project",
+    workbench.add_command(command_id="nouveau projet",
                           menu_name="tools",
                           command_label="projet",
-                          handler=lambda: load(
+                          handler=lambda: new_project(
                               askstring(MODULE_NAME, "Entrez le nom de votre projet")))
 
     # workbench.bind("WorkbenchClose", before_running)
@@ -136,6 +145,7 @@ def load_plugin():
 
     workbench.add_view(MemorycodeView, "Memorycode", "se")
     get_workbench().after(100, periodic_output_check)
+    get_workbench().after(1000, periodic_file_save)
 
 
 def unload_plugin(event=None):

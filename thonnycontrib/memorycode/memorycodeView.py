@@ -4,6 +4,8 @@ from time import strftime, gmtime
 EMOJI_TIME = chr(128336)
 EMOJI_OK = chr(10004)
 EMOJI_ERROR = chr(9888)
+EMOJI_UNSAVED = chr(128190)
+EMOJI_DISCONNECTED = chr(128683)
 
 class MemorycodeView (ttk.Frame):
     def __init__(self, parent, *args, **kwargs):
@@ -20,7 +22,7 @@ class MemorycodeView (ttk.Frame):
         self.flags_label = ttk.Label(self.top_frame, text=" "*10)
         self.flags_label.grid(row=0, column=1, sticky="nsew")
         self.comm_label = ttk.Label(self.top_frame, text=" "*10)
-        self.comm_label.grid(row=0, column=2, sticky="nsew")
+        self.comm_label.grid(row=2, column=1, sticky="nsew")
 
         canvas = Canvas(self, bg="white")
 
@@ -87,8 +89,15 @@ class MemorycodeView (ttk.Frame):
 
     def display_flags(self, flags):
         text = self.flags_label.cget("text")
-        text = "" if not ("busy" in flags) else (EMOJI_TIME if ord(text[0]) < ord(EMOJI_TIME) or ord(text[0]) > ord(EMOJI_TIME) + 11 else chr(ord(text[0]) + 1))
-        text += (EMOJI_OK if not ("busy" in flags) else "") if "OK" in flags else EMOJI_ERROR
+        text = " " if not ("busy" in flags) else (EMOJI_TIME if ord(text[0]) < ord(EMOJI_TIME) or ord(text[0]) > ord(EMOJI_TIME) + 11 else chr(ord(text[0]) + 1))
+        if "no_repo" in flags:
+            text += EMOJI_ERROR + " Dossier non initialisé"
+        elif "no_project" in flags:
+            text += EMOJI_ERROR + " Projet non sélectionné"
+        elif "dirty" in flags:
+            text += EMOJI_UNSAVED + " Changements en cours"
+        elif "busy" not in flags:
+            text += EMOJI_OK
         self.flags_label.config(text=text)
 
     def display_communication(self, comm):
