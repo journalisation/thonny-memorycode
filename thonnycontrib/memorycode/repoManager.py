@@ -162,7 +162,7 @@ class RepoManager(Thread):
                 self.repo.git.checkout(branch_name)
             elif "origin/" + str(branch_name) in self.repo.references:
                 # Branch exists on remote, checkout
-                self.repo.git.checkout("origin/" + branch_name)
+                self.repo.git.checkout("-b", branch_name, "origin/" + branch_name)
             elif create_if_not_exists:
                 # Branch does not exist yet, create it and checkout
                 self.repo.git.branch(branch_name)

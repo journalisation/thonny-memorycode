@@ -50,17 +50,20 @@ def get_current_file_directory():
             directory = os.path.dirname(filename)
             return directory
 
-def save(message="commit from Thonny"):
+def save():
     editor = get_workbench().get_editor_notebook().get_current_editor()
     editor.save_file()
-    memorycode.save(askstring(MODULE_NAME, "Entrez le nom de votre sauvegarde"))
+    save_name = askstring(MODULE_NAME, "Entrez le nom de votre sauvegarde")
+    save_name = None if save_name == "" else save_name
+    memorycode.save(save_name)
     get_workbench().get_view("MemorycodeView").from_saves(memorycode.get_saves())
 
-def load(branch_name=None):
+def load_project(branch_name=None):
+    memorycode.save()
     memorycode.load(branch_name)
-    get_workbench().get_view("MemorycodeView").from_saves(memorycode.get_saves())
 
 def new_project(name):
+    memorycode.save()
     memorycode.new_project(name)
 
 def show_view(arg):
@@ -74,7 +77,7 @@ def switch_tab(arg):
     new_dir = get_current_file_directory()
     if new_dir and current_directory != new_dir:
         memorycode.set_directory(path=get_current_file_directory())
-        load()
+        memorycode.load()
         current_directory = get_current_file_directory()
 
 def periodic_output_check():
@@ -82,7 +85,7 @@ def periodic_output_check():
     view = get_workbench().get_view("MemorycodeView")
     view.from_saves(memorycode.get_saves())
     current_project = memorycode.get_current_project_name()
-    view.set_projects_list(memorycode.get_projects(), current_project, memorycode.load)
+    view.set_projects_list(memorycode.get_projects(), current_project, load_project)
     view.display_flags(memorycode.diagnostic())
     if not output_queue.empty():
         view.display_communication(output_queue.get())
@@ -91,7 +94,7 @@ def periodic_output_check():
 
 def periodic_file_save():
     editor = get_workbench().get_editor_notebook().get_current_editor()
-    if editor:
+    if editor and not editor.check_for_external_changes():
         editor.save_file()
     get_workbench().after(1000, periodic_file_save)
 

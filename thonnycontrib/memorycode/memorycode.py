@@ -29,7 +29,7 @@ class Memorycode:
                 self.repo_manager = EmptyRepoManager(path, self.output)
                 self.output("No repository set.")
 
-    def save(self, message="commit from Thonny"):
+    def save(self, message=None):
         if self.repo_manager is not None:
             self.repo_manager.commit(message)
             self.repo_manager.push()
@@ -39,6 +39,7 @@ class Memorycode:
             if branch_name is None:
                 branch_name = self.get_current_project_name()
             self.repo_manager.checkout(branch_name)
+            self.repo_manager
             self.repo_manager.pull(branch_name)
 
     def new_project(self, project_name):
