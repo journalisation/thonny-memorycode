@@ -76,8 +76,9 @@ class MemorycodeView (ttk.Frame):
         string = ""
         for i in range(len(saves)):
             if(i == 0 or
-                    ((saves[i].summary != saves[i-1].summary) or (saves[i].committer.name != saves[i-1].committer.name)
-                    or (strftime("%d %b %Y", gmtime(saves[i].committed_date)) != strftime("%d %b %Y", gmtime(saves[i-1].committed_date))))):
+                    ((saves[i].summary != saves[i-1].summary and saves[i].summary != "autosave")
+                     or (saves[i].committer.name != saves[i-1].committer.name)
+                     or (strftime("%d %b %Y", gmtime(saves[i].committed_date)) != strftime("%d %b %Y", gmtime(saves[i-1].committed_date))))):
                 rect = Canvas(self.scrollable_frame, bg="blue", height=50)
                 rect.grid(row=i, column=0, sticky="nsew")
                 rect.bind("<1>", lambda x : print(x))

@@ -104,7 +104,7 @@ class RepoManager(Thread):
     def __commit(self, commit_message):
         if self.repo is None:
             return False
-        if not (self.repo.head.commit.diff(None) or self.repo.untracked_files or self.repo.is_dirty()):
+        if not (commit_message or self.repo.head.commit.diff(None) or self.repo.untracked_files or self.repo.is_dirty()):
             return False
         if self.get_branch_name() is None:
             self.output("Cannot commit to main branch.")
