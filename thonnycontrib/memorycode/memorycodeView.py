@@ -1,5 +1,5 @@
 from tkinter import ttk, Canvas, Frame, Label, Scrollbar, Text
-from time import strftime, gmtime
+from time import strftime, localtime
 
 EMOJI_TIME = chr(128336)
 EMOJI_OK = chr(10004)
@@ -78,12 +78,12 @@ class MemorycodeView (ttk.Frame):
             if(i == 0 or
                     ((saves[i].summary != saves[i-1].summary and saves[i].summary != "autosave")
                      or (saves[i].committer.name != saves[i-1].committer.name)
-                     or (strftime("%d %b %Y", gmtime(saves[i].committed_date)) != strftime("%d %b %Y", gmtime(saves[i-1].committed_date))))):
+                     or (strftime("%d %b %Y", localtime(saves[i].committed_date)) != strftime("%d %b %Y", localtime(saves[i-1].committed_date))))):
                 rect = Canvas(self.scrollable_frame, bg="blue", height=50)
                 rect.grid(row=i, column=0, sticky="nsew")
                 rect.bind("<1>", lambda x : print(x))
                 text = Text(rect, fg="white", bg="blue", height=rect.winfo_height()*3)
-                string = saves[i].summary + "\n" + saves[i].committer.name + "\n" + strftime("%a, %d %b %Y %H:%M", gmtime(saves[i].committed_date))
+                string = saves[i].summary + "\n" + saves[i].committer.name + "\n" + strftime("%a, %d %b %Y %H:%M", localtime(saves[i].committed_date))
                 text.insert("1.0", string)
                 text.config(state=('disabled' if i != 0 else 'normal'), cursor=('arrow' if i != 0 else 'xterm'))
                 text.save = saves[i]
