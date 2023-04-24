@@ -141,6 +141,7 @@ class RepoManager(Thread):
                     self.output("Pulled successfully.")
             else:
                 self.output("Cannot pull from main branch.")
+                self.__fetch()
         else:
             self.output("No remote repository.")
 
