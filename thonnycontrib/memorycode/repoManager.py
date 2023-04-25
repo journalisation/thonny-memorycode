@@ -2,6 +2,7 @@ from threading import Thread
 from time import time, sleep
 from queue import Queue
 
+
 class RepoManager(Thread):
     def __init__(self, repo, output=lambda x: x, autosave=True):
         super().__init__()
@@ -11,6 +12,7 @@ class RepoManager(Thread):
         self.ssh_key_path = str(repo.working_dir).replace("\\", "/") + "/.ssh/id_ed25519" # git needs forward slashes
         self.task_queue = Queue()
         self.errors = []
+        self.commits = list(self.repo.iter_commits())
 
     def run(self):
         t_autosave = time()
@@ -40,6 +42,8 @@ class RepoManager(Thread):
                         return
                 except Exception as e:
                     self.output("Task failed: " + str(e))
+
+                self.commits = list(self.repo.iter_commits())  # TODO improve the efficiency (0.2s each call)
                 self.task_queue.task_done()
 
     def commit(self, commit_message = None):
@@ -74,11 +78,11 @@ class RepoManager(Thread):
             branches = [b.split("/")[-1] if b.startswith("origin/") else b for b in branches]
             branches = list(dict.fromkeys(branches)) # Remove duplicates
             branches.sort()
-            return  branches
+            return branches
 
     def iter_commits(self):
         if self.repo is not None:
-            return self.repo.iter_commits()
+            return self.commits
 
     def diagnostic(self):
         diag = []
@@ -86,8 +90,8 @@ class RepoManager(Thread):
             diag += ["no_repo"]
         if self.get_branch_name() is None:
             diag += ["no_project"]
-        if self.repo.head.commit.diff(None) or self.repo.untracked_files or self.repo.is_dirty():
-            diag += ["dirty"]
+        # if self.repo.head.commit.diff(None) or self.repo.untracked_files:# or self.repo.is_dirty():
+        #    diag += ["dirty"]
         if self.is_busy():
             diag += ["busy"]
         return diag
