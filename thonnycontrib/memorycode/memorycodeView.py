@@ -1,4 +1,4 @@
-from tkinter import ttk, Canvas, Frame, Label, Scrollbar, Text
+from tkinter import ttk, Canvas, Frame, Label, Scrollbar, Text, IntVar
 from time import strftime, localtime
 
 EMOJI_TIME = chr(128336)
@@ -23,6 +23,11 @@ class MemorycodeView (ttk.Frame):
         self.flags_label.grid(row=0, column=1, sticky="nsew")
         self.comm_label = ttk.Label(self.top_frame, text=" "*10)
         self.comm_label.grid(row=2, column=1, sticky="nsew")
+
+        self.stop_tracking_var = IntVar()
+        self.stop_tracking_checkbutton = ttk.Checkbutton(self.top_frame, text="suspendre suivi", variable=self.stop_tracking_var, state="disabled")
+        self.stop_tracking_var.set(1) # 1 = checked, 0 = unchecked
+        self.stop_tracking_checkbutton.grid(row=1, column=0, sticky="ne")
 
         canvas = Canvas(self, bg="white")
 
@@ -118,6 +123,17 @@ class MemorycodeView (ttk.Frame):
 
     def display_communication(self, comm):
         self.comm_label.config(text=comm)
+
+    def stop_tracking(self):
+        return "selected" in self.stop_tracking_checkbutton.state()
+
+    def untrackable(self):
+        self.stop_tracking_checkbutton.state(["disabled"])
+        self.stop_tracking_var.set(1)
+
+    def trackable(self):
+        self.stop_tracking_checkbutton.state(["!disabled"])
+        self.stop_tracking_var.set(0)
 
 
 

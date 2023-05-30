@@ -9,7 +9,7 @@ class RepoManager(Thread):
         self.repo = repo
         self.output = output
         self.autosave = autosave
-        self.ssh_key_path = str(repo.working_dir).replace("\\", "/") + "/.ssh/id_ed25519" # git needs forward slashes
+        self.ssh_key_path = str(repo.working_dir).replace("\\", "/") + "/.ssh/id_ed25519"  # git needs forward slashes
         self.task_queue = Queue()
         self.errors = []
         self.commits = list(self.repo.iter_commits())
@@ -46,7 +46,7 @@ class RepoManager(Thread):
                 self.commits = list(self.repo.iter_commits())  # TODO improve the efficiency (0.2s each call)
                 self.task_queue.task_done()
 
-    def commit(self, commit_message = None):
+    def commit(self, commit_message=None):
         self.output("Committing code...")
         self.task_queue.put(["commit", commit_message])
 
@@ -76,7 +76,7 @@ class RepoManager(Thread):
             branches = [str(b) for b in self.__get_branches()]
             branches = [b for b in branches if not str(b).endswith("main") and not str(b).endswith("HEAD")]
             branches = [b.split("/")[-1] if b.startswith("origin/") else b for b in branches]
-            branches = list(dict.fromkeys(branches)) # Remove duplicates
+            branches = list(dict.fromkeys(branches))  # Remove duplicates
             branches.sort()
             return branches
 
@@ -108,7 +108,8 @@ class RepoManager(Thread):
     def __commit(self, commit_message):
         if self.repo is None:
             return False
-        if not (commit_message or self.repo.head.commit.diff(None) or self.repo.untracked_files or self.repo.is_dirty()):
+        if not (commit_message or self.repo.head.commit.diff(
+                None) or self.repo.untracked_files or self.repo.is_dirty()):
             return False
         if self.get_branch_name() is None:
             self.output("Cannot commit to main branch.")

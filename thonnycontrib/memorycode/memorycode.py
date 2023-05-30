@@ -85,6 +85,8 @@ class Memorycode:
                 repo_manager.stop()
                 repo_manager.join()
 
+    def is_trackable(self):
+        return self.repo_manager is not None and type(self.repo_manager) is RepoManager
 
 
 
