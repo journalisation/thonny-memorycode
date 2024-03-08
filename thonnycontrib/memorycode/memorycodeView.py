@@ -27,7 +27,7 @@ class MemorycodeView (ttk.Frame):
         self.stop_tracking_var = IntVar()
         self.stop_tracking_checkbutton = ttk.Checkbutton(self.top_frame, text="suspendre suivi", variable=self.stop_tracking_var, state="disabled")
         self.stop_tracking_var.set(1) # 1 = checked, 0 = unchecked
-        self.stop_tracking_checkbutton.grid(row=1, column=0, sticky="ne")
+        #self.stop_tracking_checkbutton.grid(row=1, column=0, sticky="ne")
 
         canvas = Canvas(self, bg="white")
 

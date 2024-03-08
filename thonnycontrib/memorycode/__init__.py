@@ -7,6 +7,8 @@ from tkinter.simpledialog import askstring
 from thonnycontrib.memorycode.memorycodeView import MemorycodeView
 from thonnycontrib.memorycode.memorycode import Memorycode
 from queue import Queue
+from time import time
+from thonnycontrib.memorycode.log import add_to_file
 
 # Git and GitPython localisation attempt
 try:
@@ -124,6 +126,12 @@ class Manager:
             self.enabled = False
         except Exception as e:
             showinfo(MODULE_NAME, str(e))
+            
+    def text_inserted(self, event):
+        if self.enabled:
+            if 'shell' in str(event.text_widget): # in shell
+                log_file =  os.path.join(self.current_directory, ".log")
+            #    add_to_file(log_file, event.text)
 
 def load_plugin():
     try:
@@ -151,7 +159,12 @@ def load_plugin():
 
         # workbench.bind("WorkbenchClose", before_running)
         # workbench.bind("NewFile", lambda arg: showinfo("new", arg))
-        # workbench.bind("RunFile", lambda arg: showinfo("run1", arg))
+        workbench.bind("<<Run>>", lambda arg: showinfo("run1", arg))
+        workbench.bind("<<RunFile>>", lambda arg: showinfo("run", arg))
+        get_workbench().bind("TextInsert", manager.text_inserted)
+        #get_workbench().bind("TextDelete", lambda arg: showinfo("text delete", arg))
+        #workbench.bind("Runner", lambda arg: showinfo("run2", arg))
+        # workbench.bind("WindowFocusIn", lambda arg: showinfo("run1", arg))
         # workbench.bind("Save", lambda x: memorycode.save())
         # workbench.bind("RemoteFilesChanged", lambda arg: showinfo("run3", arg))
         workbench.bind("ShowView", manager.show_view)
