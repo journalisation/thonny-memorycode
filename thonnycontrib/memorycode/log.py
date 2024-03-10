@@ -34,7 +34,9 @@ class Log:
             print(event.sequence)
             if event.sequence == "TextInsert":
                 if 'shell' in str(event.text_widget):  # in shell
-                    self.add_to_file(f"OP{self.get_time()} {event.text}\n")
+                    for line in event.text.split("\n"):
+                        if line:
+                            self.add_to_file(f"OP{self.get_time()} {line}\n")
             elif event.sequence == "ToplevelResponse" and event.command_name == "Run":
                 self.add_to_file(f"RN{self.get_time()} \n")
             elif event.sequence == "<FocusIn>":
