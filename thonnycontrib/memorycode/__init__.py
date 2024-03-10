@@ -7,7 +7,7 @@ from tkinter.simpledialog import askstring
 from thonnycontrib.memorycode.memorycodeView import MemorycodeView
 from thonnycontrib.memorycode.memorycode import Memorycode
 from queue import Queue
-from thonnycontrib.memorycode.log import add_to_file
+from thonnycontrib.memorycode.log import Log
 
 # Git and GitPython localisation attempt
 try:
@@ -52,7 +52,7 @@ class Manager:
         self.output_queue = Queue()
         self.enabled = False
         self.memorycode = Memorycode(output=self.output_queue.put)
-        self.log_file = None
+        self.logger = Log()
 
     def info(self):
         current_tab = get_workbench().get_editor_notebook().get_current_editor()
@@ -93,7 +93,7 @@ class Manager:
             self.memorycode.set_directory(path=get_current_file_directory())
             self.memorycode.load()
             self.current_directory = get_current_file_directory()
-            self.log_file =  os.path.join(self.current_directory, ".log")
+            self.logger.set_file(os.path.join(self.current_directory, ".log"))
             if self.memorycode.is_trackable():
                 self.enabled = True
                 get_workbench().get_view("MemorycodeView").trackable()
@@ -128,11 +128,9 @@ class Manager:
         except Exception as e:
             showinfo(MODULE_NAME, str(e))
             
-    def text_inserted(self, event):
+    def event_logger(self, event):
         if self.enabled:
-            print(event.text_widget, event.text)
-            if 'shell' in str(event.text_widget): # in shell
-                add_to_file(self.log_file, event.text)
+            self.logger.log(event)
 
 def load_plugin():
     try:
@@ -162,7 +160,20 @@ def load_plugin():
         # workbench.bind("NewFile", lambda arg: showinfo("new", arg))
         workbench.bind("<<Run>>", lambda arg: showinfo("run1", arg))
         workbench.bind("<<RunFile>>", lambda arg: showinfo("run", arg))
-        get_workbench().bind("TextInsert", manager.text_inserted)
+        get_workbench().bind("TextInsert", manager.event_logger)
+        get_workbench().bind("ToplevelResponse", manager.event_logger)
+        get_workbench().bind("<<Cut>>", manager.event_logger)
+        get_workbench().bind("<<Copy>>", manager.event_logger)
+        get_workbench().bind("<<Paste>>", manager.event_logger)
+        get_workbench().bind("<<Undo>>", manager.event_logger)
+        get_workbench().bind("<<Redo>>", manager.event_logger)
+        get_workbench().bind("<<Find>>", manager.event_logger)
+        get_workbench().bind("<<Replace>>", manager.event_logger)
+        get_workbench().bind("<FocusIn>", manager.event_logger)
+        get_workbench().bind("<FocusOut>", manager.event_logger)
+        get_workbench().bind("WindowFocusIn", manager.event_logger)
+        get_workbench().bind("WindowFocusOut", manager.event_logger)
+
         #get_workbench().bind("TextDelete", lambda arg: showinfo("text delete", arg))
         #workbench.bind("Runner", lambda arg: showinfo("run2", arg))
         # workbench.bind("WindowFocusIn", lambda arg: showinfo("run1", arg))
