@@ -7,7 +7,6 @@ from tkinter.simpledialog import askstring
 from thonnycontrib.memorycode.memorycodeView import MemorycodeView
 from thonnycontrib.memorycode.memorycode import Memorycode
 from queue import Queue
-from time import time
 from thonnycontrib.memorycode.log import add_to_file
 
 # Git and GitPython localisation attempt
@@ -53,6 +52,7 @@ class Manager:
         self.output_queue = Queue()
         self.enabled = False
         self.memorycode = Memorycode(output=self.output_queue.put)
+        self.log_file = None
 
     def info(self):
         current_tab = get_workbench().get_editor_notebook().get_current_editor()
@@ -93,6 +93,7 @@ class Manager:
             self.memorycode.set_directory(path=get_current_file_directory())
             self.memorycode.load()
             self.current_directory = get_current_file_directory()
+            self.log_file =  os.path.join(self.current_directory, ".log")
             if self.memorycode.is_trackable():
                 self.enabled = True
                 get_workbench().get_view("MemorycodeView").trackable()
@@ -118,7 +119,7 @@ class Manager:
             editor = get_workbench().get_editor_notebook().get_current_editor()
             if editor and not editor.check_for_external_changes():
                 editor.save_file()
-        get_workbench().after(1000, self.periodic_file_save)
+        get_workbench().after(10000, self.periodic_file_save)
 
     def close(self, event=None):
         try:
@@ -129,9 +130,9 @@ class Manager:
             
     def text_inserted(self, event):
         if self.enabled:
+            print(event.text_widget, event.text)
             if 'shell' in str(event.text_widget): # in shell
-                log_file =  os.path.join(self.current_directory, ".log")
-            #    add_to_file(log_file, event.text)
+                add_to_file(self.log_file, event.text)
 
 def load_plugin():
     try:
@@ -176,7 +177,7 @@ def load_plugin():
 
         workbench.add_view(MemorycodeView, "Memorycode", "se")
         get_workbench().after(100, manager.periodic_output_check)
-        get_workbench().after(1000, manager.periodic_file_save)
+        get_workbench().after(10000, manager.periodic_file_save)
 
     except Exception as e:
         showinfo(MODULE_NAME, str(e))
