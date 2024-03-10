@@ -97,6 +97,7 @@ class Manager:
             if self.memorycode.is_trackable():
                 self.enabled = True
                 get_workbench().get_view("MemorycodeView").trackable()
+                self.bind_editor_commands()
             else:
                 self.enabled = False
                 get_workbench().get_view("MemorycodeView").untrackable()
@@ -131,6 +132,21 @@ class Manager:
     def event_logger(self, event):
         if self.enabled:
             self.logger.log(event)
+
+    def bind_editor_commands(self):
+        editor = get_workbench().get_editor_notebook().get_current_editor()
+        print(dir(editor))
+        text = editor.get_text_widget()
+        text.bind("<<Cut>>", self.event_logger)
+        text.bind("<<Copy>>", self.event_logger)
+        text.bind("<<Paste>>", self.event_logger)
+        text.bind("<<Undo>>", self.event_logger)
+        text.bind("<<Redo>>", self.event_logger)
+        text.bind("<<Find>>", self.event_logger)
+        text.bind("<<Replace>>", self.event_logger)
+        text.bind("<FocusIn>", self.event_logger)
+        text.bind("<FocusOut>", self.event_logger)
+
 
 def load_plugin():
     try:
