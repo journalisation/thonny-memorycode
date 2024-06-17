@@ -17,15 +17,16 @@ class RepoManager(Thread):
         # attempt to find the ssh key
         ssh_key_dir = str(repo.working_dir).replace("\\", "/") + "/.ssh"
         self.ssh_key_path = None
-        if path.isfile(ssh_key_dir + "/id_ed25519"):
-            self.ssh_key_path = ssh_key_dir + "/id_ed25519"
-            chmod(self.ssh_key_path, 0o600)
-        elif len(listdir(ssh_key_dir)) > 0:
-            for key in listdir(ssh_key_dir):
-                if not key.endswith(".pub"):
-                    self.ssh_key_path = ssh_key_dir + "/" + key
-                    chmod(self.ssh_key_path, 0o600)
-                    break
+        if path.isdir(ssh_key_dir):
+            if path.isfile(ssh_key_dir + "/id_ed25519"):
+                self.ssh_key_path = ssh_key_dir + "/id_ed25519"
+                chmod(self.ssh_key_path, 0o600)
+            elif len(listdir(ssh_key_dir)) > 0:
+                for key in listdir(ssh_key_dir):
+                    if not key.endswith(".pub"):
+                        self.ssh_key_path = ssh_key_dir + "/" + key
+                        chmod(self.ssh_key_path, 0o600)
+                        break
 
         if self.ssh_key_path is None:
             self.output("SSH key not found.")
