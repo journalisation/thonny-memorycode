@@ -1,6 +1,7 @@
 from threading import Thread
 from time import time, sleep
 from queue import Queue
+from os import listdir, chmod, path
 
 
 class RepoManager(Thread):
@@ -9,10 +10,25 @@ class RepoManager(Thread):
         self.repo = repo
         self.output = output
         self.autosave = autosave
-        self.ssh_key_path = str(repo.working_dir).replace("\\", "/") + "/.ssh/id_ed25519"  # git needs forward slashes
         self.task_queue = Queue()
         self.errors = []
         self.commits = list(self.repo.iter_commits())
+
+        # attempt to find the ssh key
+        ssh_key_dir = str(repo.working_dir).replace("\\", "/") + "/.ssh"
+        self.ssh_key_path = None
+        if path.isfile(ssh_key_dir + "/id_ed25519"):
+            self.ssh_key_path = ssh_key_dir + "/id_ed25519"
+            chmod(self.ssh_key_path, 0o600)
+        elif len(listdir(ssh_key_dir)) > 0:
+            for key in listdir(ssh_key_dir):
+                if not key.endswith(".pub"):
+                    self.ssh_key_path = ssh_key_dir + "/" + key
+                    chmod(self.ssh_key_path, 0o600)
+                    break
+
+        if self.ssh_key_path is None:
+            self.output("SSH key not found.")
 
     def run(self):
         t_autosave = time()

@@ -130,7 +130,7 @@ class Manager:
             showinfo(MODULE_NAME, str(e))
             
     def event_logger(self, event):
-        if self.enabled:
+        if self.enabled and self.memorycode.get_current_project_name():
             self.logger.log(event)
 
     def bind_editor_commands(self):
