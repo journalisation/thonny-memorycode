@@ -5,7 +5,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="memorycode",
-    version="0.1.2",
+    version="0.1.3",
     author="Jerome Amiguet",
     packages=["thonnycontrib.memorycode"],
     description="Memorycode",
